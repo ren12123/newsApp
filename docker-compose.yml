@@ -1,0 +1,11 @@
+version: "3.8"
+services: #動かすコンテナ一覧　今回はdbだけ
+  db: #コンテナ名　自由に付けられる。　今回はデータベースだからdb
+    image: postgres:15 #使うdockerイメージ　PostgreSQL15の完成済み環境を使う
+    restart: always #コンテナが止まった時の動き　今回は何があっても再起動
+    environment:
+      POSTGRES_USER: user #データベースのログインユーザー名
+      POSTGRES_PASSWORD: password #ログインに必要なパスワード　本番では絶対に簡単なものはダメ
+      POSTGRES_DB: mydatabase #最初から作られるデータベース名
+    ports:
+      - "5432:5432" #公開設定　外側：内側という意味　外側がPC側　内側がコンテナ側　つまりPCの5432番にアクセスしたらコンテナのPostgreSQLに繋ぐ
