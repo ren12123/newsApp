@@ -90,11 +90,17 @@ func main() {
 	}
 	fmt.Println("解析成功")
 
-	for i, item := range rss.Items {
-		if i >= 5 {
-			break
+	for _, item := range rss.Items {
+		_, err := conn.Exec(ctx, `
+		INSERT INTO articles (title, url)
+		VALUES ($1, $2)
+		ON CONFLICT (url) DO NOTHING`,
+			item.Title, item.Link,
+		)
+		if err != nil {
+			fmt.Printf("転送失敗:%v\n", err)
+			os.Exit(1)
 		}
-		fmt.Printf("[%d] %s\n URL: %s\n\n", i+1, item.Title, item.Link)
 	}
-
+	fmt.Println("転送成功")
 }
