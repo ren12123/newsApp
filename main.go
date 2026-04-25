@@ -2,11 +2,23 @@ package main
 
 import (
 	"context"
+	"encoding/xml"
 	"fmt"
+	"io"
+	"net/http"
 	"os"
 
 	"github.com/jackc/pgx/v5"
 )
+
+type ITEM struct {
+	Title string `xml:"title"`
+	Link  string `xml:"link"`
+}
+
+type RSS struct {
+	Items []ITEM `xml:"channel>item"` //channelの中にあるアイテムをすべて取る
+}
 
 func main() {
 	ctx := context.Background()
@@ -52,5 +64,37 @@ func main() {
 	}
 
 	fmt.Println("ニュースアプリのデータベース基盤が完成しました！")
+
+	url := "https://news.google.com/rss?hl=ja&gl=JP&ceid=JP:ja"
+
+	resp, err := http.Get(url)
+	if err != nil {
+		fmt.Printf("データ取得失敗:%v\n", err)
+		return
+	}
+	fmt.Println("データ取得")
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Printf("読み込み失敗:%v\n", err)
+		return
+	}
+	fmt.Println("読み込み成功")
+
+	var rss RSS
+	err = xml.Unmarshal(body, &rss) //rssだけだったらコピーが渡されるだけで意味がない
+	if err != nil {
+		fmt.Printf("解析失敗: %v\n", err)
+		return
+	}
+	fmt.Println("解析成功")
+
+	for i, item := range rss.Items {
+		if i >= 5 {
+			break
+		}
+		fmt.Printf("[%d] %s\n URL: %s\n\n", i+1, item.Title, item.Link)
+	}
 
 }
