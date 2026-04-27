@@ -87,5 +87,16 @@ func GetUnsummarizedArticles(ctx context.Context, conn *pgx.Conn) ([]Article, er
 	}
 
 	return targets, nil
+}
+
+func InsertSummary(ctx context.Context, conn *pgx.Conn, newsID int, content string, aiModel string) {
+	_, err := conn.Exec(ctx, `
+			  INSERT INTO summaries (news_id, content, ai_model) 
+			  VALUES ($1, $2, $3)`, newsID, content, aiModel)
+	if err != nil {
+		fmt.Printf("要約の保存失敗: %v\n", err)
+		return
+	}
+	fmt.Printf("要約の保存成功")
 
 }
