@@ -8,6 +8,11 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
+type Article struct {
+	ID    int
+	Title string
+}
+
 func CreateTables(ctx context.Context, conn *pgx.Conn) {
 	query := `
 	CREATE TABLE IF NOT EXISTS articles (
@@ -55,5 +60,32 @@ func InsertArticles(ctx context.Context, conn *pgx.Conn, title string, url strin
 		os.Exit(1)
 	}
 	fmt.Println("転送成功")
+
+}
+
+func GetUnsummarizedArticles(ctx context.Context, conn *pgx.Conn) ([]Article, error) {
+	query := `
+	SELECT news_id, title
+	FROM articles
+	WHERE news_id NOT IN (SELECT news_id FROM summarise)
+	LIMIT 5`
+
+	rows, err := conn.Query(ctx, query)
+	if err != nil {
+		fmt.Printf("取得失敗:%v\n", err)
+	}
+	defer rows.Close()
+
+	var targets []Article
+
+	for rows.Next() {
+		var a Article
+		if err := rows.Scan(&a.ID, &a.Title); err != nil {
+			return nil, err
+		}
+		targets = append(targets, a)
+	}
+
+	return targets, nil
 
 }
