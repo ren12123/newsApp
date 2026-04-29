@@ -8,6 +8,15 @@ import (
 	"net/http"
 )
 
+type ITEM struct {
+	Title string `xml:"title"`
+	Link  string `xml:"link"`
+}
+
+type RSS struct {
+	Items []ITEM `xml:"channel>item"` //channelの中にあるアイテムをすべて取る
+}
+
 func Getnewsforhttp(ctx context.Context, url string) ([]ITEM, error) {
 	resp, err := http.Get(url)
 	if err != nil {
