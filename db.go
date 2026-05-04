@@ -3,7 +3,9 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 	"os"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 )
@@ -18,16 +20,18 @@ func CreateTables(ctx context.Context, conn *pgx.Conn) {
 	CREATE TABLE IF NOT EXISTS articles (
 		news_id SERIAL PRIMARY KEY,
 		title TEXT NOT NULL,
-		date TIMESTAMP DEFAULT NOW(),
-		category_id INT,
-		url TEXT UNIQUE
+		description TEXT,
+		fetched_at TIMESTAMP DEFAULT NOW(),
+		published_at TIMESTAMP,
+		category_id INT REFERENCES categories(category_id),
+		url TEXT UNIQUE NOT NULL
 	);
 
 	CREATE TABLE IF NOT EXISTS summaries (
 		summary_id SERIAL PRIMARY KEY,
-		news_id INT,
-		content TEXT,
-		ai_model TEXT
+		news_id INT UNIQUE REFERENCES articles(news_id) ON DELETE CASCADE,
+		content TEXT NOT NULL,
+		ai_model TEXT NOT NULL
 	);
 
 	CREATE TABLE IF NOT EXISTS users (
@@ -35,9 +39,15 @@ func CreateTables(ctx context.Context, conn *pgx.Conn) {
 		name TEXT NOT NULL
 	);
 
+	CREATE TABLE IF NOT EXISTS categories (
+    	category_id SERIAL PRIMARY KEY,
+    	name TEXT NOT NULL UNIQUE
+	);
+
 	CREATE TABLE IF NOT EXISTS user_categories (
-		user_id INT,
-		category_id INT
+		user_id INT REFERENCES users(user_id) ON DELETE CASCADE,
+		category_id INT,
+		PRIMARY KEY (user_id, category_id)
 	);`
 
 	_, err := conn.Exec(ctx, query)
@@ -48,16 +58,17 @@ func CreateTables(ctx context.Context, conn *pgx.Conn) {
 	fmt.Println("テーブル作成成功")
 }
 
-func InsertArticles(ctx context.Context, conn *pgx.Conn, title string, url string) {
+func InsertArticles(ctx context.Context, conn *pgx.Conn, title string, url string, description string, published_at time.Time, category_ID int) {
 	_, err := conn.Exec(ctx, `
-		INSERT INTO articles (title, url)
-		VALUES ($1, $2)
+		INSERT INTO articles (title, url, description, published_at, categoryID)
+		VALUES ($1, $2, $3, $4, $5)
 		ON CONFLICT (url) DO NOTHING`,
-		title, url,
+		title, url, description, published_at, category_ID,
 	)
 	if err != nil {
 		fmt.Printf("転送失敗:%v\n", err)
-		os.Exit(1)
+		log.Printf("記事保存失敗:%v\n", err)
+		return
 	}
 	fmt.Println("転送成功")
 

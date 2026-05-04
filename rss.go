@@ -9,12 +9,15 @@ import (
 )
 
 type ITEM struct {
-	Title string `xml:"title"`
-	Link  string `xml:"link"`
+	Title       string `xml:"title"`
+	Link        string `xml:"link"`
+	PubDate     string `xml:"pubDate"`
+	Description string `xml:"description"`
+	Category    string `xml:"category"`
 }
 
 type RSS struct {
-	Items []ITEM `xml:"channel>item"` //channelの中にあるアイテムをすべて取る
+	Items []ITEM `xml:"channel>item"`
 }
 
 func Getnewsforhttp(ctx context.Context, url string) ([]ITEM, error) {

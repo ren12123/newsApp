@@ -24,7 +24,7 @@ func main() {
 	defer conn.Close(ctx)
 
 	if mode == "fetch" || mode == "all" {
-		url := "https://news.google.com/rss?hl=ja&gl=JP&ceid=JP:ja"
+		url := "https://www.nature.com/"
 
 		articles, err := Getnewsforhttp(ctx, url)
 		if err != nil {
