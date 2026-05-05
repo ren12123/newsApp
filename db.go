@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"time"
 
 	"github.com/jackc/pgx/v5"
 )
@@ -20,10 +19,7 @@ func CreateTables(ctx context.Context, conn *pgx.Conn) {
 	CREATE TABLE IF NOT EXISTS articles (
 		news_id SERIAL PRIMARY KEY,
 		title TEXT NOT NULL,
-		description TEXT,
 		fetched_at TIMESTAMP DEFAULT NOW(),
-		published_at TIMESTAMP,
-		category_id INT REFERENCES categories(category_id),
 		url TEXT UNIQUE NOT NULL
 	);
 
@@ -58,12 +54,12 @@ func CreateTables(ctx context.Context, conn *pgx.Conn) {
 	fmt.Println("テーブル作成成功")
 }
 
-func InsertArticles(ctx context.Context, conn *pgx.Conn, title string, url string, description string, published_at time.Time, category_ID int) {
+func InsertArticles(ctx context.Context, conn *pgx.Conn, title string, url string) {
 	_, err := conn.Exec(ctx, `
-		INSERT INTO articles (title, url, description, published_at, categoryID)
-		VALUES ($1, $2, $3, $4, $5)
+		INSERT INTO articles (title, url)
+		VALUES ($1, $2)
 		ON CONFLICT (url) DO NOTHING`,
-		title, url, description, published_at, category_ID,
+		title, url,
 	)
 	if err != nil {
 		fmt.Printf("転送失敗:%v\n", err)
@@ -78,7 +74,7 @@ func GetUnsummarizedArticles(ctx context.Context, conn *pgx.Conn) ([]Article, er
 	query := `
 	SELECT news_id, title
 	FROM articles
-	WHERE news_id NOT IN (SELECT news_id FROM summarise)
+	WHERE news_id NOT IN (SELECT news_id FROM summaries)
 	LIMIT 5`
 
 	rows, err := conn.Query(ctx, query)

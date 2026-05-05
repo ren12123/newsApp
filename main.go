@@ -24,7 +24,7 @@ func main() {
 	defer conn.Close(ctx)
 
 	if mode == "fetch" || mode == "all" {
-		url := "https://www.nature.com/"
+		url := "https://news.google.com/rss?hl=ja&gl=JP&ceid=JP:ja"
 
 		articles, err := Getnewsforhttp(ctx, url)
 		if err != nil {
@@ -44,7 +44,7 @@ func main() {
 			return
 		}
 
-		s, err := NewAISummarizer(ctx, os.Getenv("GEMINI_API_KEY"))
+		s, err := NewAISummarizer(ctx, os.Getenv("Gemini_API_KEY"))
 		if err != nil {
 			fmt.Printf("apikeyが正しくありません:%v\n", err)
 			os.Exit(1)
@@ -56,7 +56,7 @@ func main() {
 				continue
 			}
 
-			InsertSummary(ctx, conn, a.ID, result, "Gemini-1.5-flash")
+			InsertSummary(ctx, conn, a.ID, result, "gemini-2.5-flash")
 		}
 	}
 }
